@@ -30,6 +30,8 @@ ISR(TIMER1_CAPT_vect){  //przerwanie na PB0
     if( !(TCCR1B & (1<<ICES1)) ){
         distance = ICR1 - LastCapture;      //dlugosc zbocza
         distance = distance/58;             //odleglosc w cm    (dla uint16_t odleglosc max 11m)
+		PB1 = 0;
+		PD7 = 0;
 		if(distance > 50)
 			PB1 = 1;
 		if(distance > 100)
