@@ -1,0 +1,188 @@
+// lepsza wejsja to ta bez 2
+
+//piny do sterowania silników
+#define ASTBY 9
+#define BSTBY 2
+#define AIN1 7
+#define AIN2 8
+#define BIN1 4
+#define BIN2 3
+#define APWM 6
+#define BPWM 5
+
+//piny do sterowania 
+#define LED1 13
+#define LED2 11
+
+//piny od czujników
+#define LEWY_SKRAJNY A0
+#define LEWY A1
+#define SRODKOWY A2
+#define PRAWY A3
+#define PRAWY_SKRAJNY A4
+
+//pin od potencjometru
+#define POT A5
+
+//czas
+unsigned long czas;
+unsigned long czas_poprzedni = 0;
+
+////////////////////////////////////////////////////////
+//deklaracje funkcji
+
+void do_przodu(int predkosc);
+void do_tylu(int predkosc);
+void w_lewo(int predkosc);
+void w_prawo(int predkosc);
+
+
+void setup() 
+{
+  pinMode(LED1, OUTPUT);
+  pinMode(LED2, OUTPUT);
+
+  pinMode(LEWY_SKRAJNY, INPUT);
+  pinMode(LEWY, INPUT);
+  pinMode(SRODKOWY, INPUT);
+  pinMode(PRAWY, INPUT);
+  pinMode(PRAWY_SKRAJNY, INPUT);
+
+  pinMode(AIN1, OUTPUT);
+  pinMode(AIN2, OUTPUT);
+  pinMode(BIN1, OUTPUT);
+  pinMode(BIN2, OUTPUT);
+
+  pinMode(APWM, OUTPUT);
+  pinMode(BPWM, OUTPUT);
+
+  pinMode(ASTBY, OUTPUT);
+  pinMode(BSTBY, OUTPUT);
+
+  ////////////////////////////////////
+
+  digitalWrite(LED1, LOW);
+  digitalWrite(LED2, LOW);
+
+  digitalWrite(ASTBY, HIGH);
+  digitalWrite(BSTBY, HIGH);
+
+  analogWrite(APWM, 0);
+  analogWrite(BPWM, 0);
+
+  Serial.begin(9600);
+
+  do_przodu(100);
+}
+
+  float e=0;
+  int setpoint = 0;   //wart zadana
+  float v = 0;          //predkosc silnika
+  int vb = 100;       //predkosc bazowa
+  float waga = 0;       
+  int kp = 30;        //wzmocnienie p
+  int ile_czujnikow = 0;
+
+void loop() 
+{
+  czas = millis();
+
+  if(czas - czas_poprzedni >= 10)
+  {
+    czas_poprzedni = czas;
+
+    Serial.print(analogRead(LEWY_SKRAJNY));
+    Serial.print("    ");
+    Serial.print(analogRead(LEWY));
+    Serial.print("    ");
+    Serial.print(analogRead(SRODKOWY));
+    Serial.print("    ");
+    Serial.print(analogRead(PRAWY));
+    Serial.print("    ");
+    Serial.println(analogRead(PRAWY_SKRAJNY));
+        
+    ile_czujnikow = 0;
+    waga = 0;
+    if(analogRead(SRODKOWY) > 970){
+        ile_czujnikow++;
+        waga = 0;
+    }
+    if(analogRead(PRAWY) > 970){
+        ile_czujnikow++;
+        waga += 1;
+    }
+    if(analogRead(LEWY) > 970){
+      ile_czujnikow++;
+      waga += -1;
+    }
+    if(analogRead(LEWY_SKRAJNY) > 970){
+       ile_czujnikow++;
+       waga += -2;
+    }
+    if(analogRead(PRAWY_SKRAJNY) > 970){
+      ile_czujnikow++;
+      waga += 2;
+    }
+
+    waga /= ile_czujnikow;
+    e = setpoint - waga;
+    v = vb + abs(kp*e);
+    //v = constrain(v, 0 ,255);
+    
+    if(e == 0){
+      do_przodu(v);
+    }
+    if(e > 0){
+      w_lewo(v);
+    }
+    if(e < 0){
+      w_prawo(v);
+    }
+  } 
+}
+
+
+
+void do_tylu(int predkosc)
+{
+    digitalWrite(AIN1, LOW);
+    digitalWrite(AIN2, HIGH);
+    analogWrite(APWM, predkosc);
+
+    digitalWrite(BIN1, HIGH);
+    digitalWrite(BIN2, LOW);
+    analogWrite(BPWM, predkosc);
+}
+
+void do_przodu(int predkosc)
+{
+    digitalWrite(AIN2, LOW);
+    digitalWrite(AIN1, HIGH);
+    analogWrite(APWM, predkosc);
+
+    digitalWrite(BIN2, HIGH);
+    digitalWrite(BIN1, LOW);
+    analogWrite(BPWM, predkosc);
+}
+
+void w_prawo(int predkosc)
+{
+    digitalWrite(AIN1, HIGH);
+    digitalWrite(AIN2, LOW);
+    analogWrite(APWM, predkosc);
+
+    digitalWrite(BIN1, LOW);
+    digitalWrite(BIN2, HIGH);
+    analogWrite(BPWM, 0);
+}
+
+void w_lewo(int predkosc)
+{
+    digitalWrite(AIN1, HIGH);
+    digitalWrite(AIN2, LOW);
+    analogWrite(APWM, 0);
+
+    digitalWrite(BIN1, LOW);
+    digitalWrite(BIN2, HIGH);
+    analogWrite(BPWM, predkosc);
+}
