@@ -99,10 +99,11 @@ int main(void)
 	float e=0;
     int setpoint = 0;   //wart zadana
     float v = 0;          //predkosc silnika
-    int vb = 100;       //predkosc bazowa
+    int vb = 180;       //predkosc bazowa
     float waga = 0;
     int kp = 30;        //wzmocnienie p
     int ile_czujnikow = 0;
+    int flaga = 0;
 
     while(1)
     {
@@ -111,18 +112,22 @@ int main(void)
 
 		//for(i=2; i<6; i++) { cny[i]=readADC(i); }
 		if(readADC(2) >= black[2]){
+			flaga = 1;
             ile_czujnikow++;
             waga += 5;
 		}
 		if(readADC(3) >= black[3]){
+			flaga = 0;
             ile_czujnikow++;
             waga += 1;
 		}
 		if(readADC(4) >= black[4]){
+			flaga = 0;
             ile_czujnikow++;
             waga += -1;
 		}
 		if(readADC(5) >= black[5]){
+			flaga = -1;
             ile_czujnikow++;
             waga += -5;
 		}
@@ -134,16 +139,37 @@ int main(void)
         else
             v = vb + (kp*e);
 
-        if(e = 0){
-            OCR1A = v;
-            OCR1B = v;
+        if(v > 250)
+        	v = 250;
+
+        if(e == 0){
+        	if(flaga == 0){
+				OCR1A = v;
+				OCR1B = v;
+        	}
+        	else{
+        		if(flaga < -1){
+        			OCR1A = v;
+        			OCR1B = 0;
+        		}
+        		else{
+        			OCR1A = 0;
+        			OCR1B = v;
+        		}
+        	}
         }
         if(e > 0){
             OCR1A = v;
-            OCR1B = 0;
+            if(waga == -1)
+                OCR1B = v/2;
+            else
+                OCR1B = 0;
         }
         if(e < 0){
-            OCR1A = 0;
+            if(waga == 1)
+                OCR1A = v/2;
+            else
+                OCR1A = 0;
             OCR1B = v;
         }
 
