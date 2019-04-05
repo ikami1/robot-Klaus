@@ -1,5 +1,7 @@
-# robot-Klaus
+# robot-Klaus  
 
-robot - najstarsze
-czujnik - starsze
-klaus - ostatnie
+software for linefollower
+
+robot - najstarsze  
+czujnik - starsze  
+klaus - ostatnie  
